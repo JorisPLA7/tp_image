@@ -26,7 +26,7 @@
             Pointeur sur l'image tampon 2 : r8
             Pointeur sur l'image finale : 	r9
   			n nombre de pixels :			r12
-
+			iterateur de pixels :			r13
   Les registes rbx, rbp, r12, r13, r14, et r15 doivent être sauvegardés
   si vous les utilisez (sauvegarde par l'appelé). Les autres registres 
   peuvent être modifiés sans risque (sauvegardés par l'appelant).
@@ -46,15 +46,22 @@ process_image_asm:
 			#on calcule la taille en memoire de limage
 			mov 	r12, rdi
 			imul 	r12, rsi
-			#imul	r12, 4
 
-			#on ecrit un truc
+			#on ecrit du blanc en coins et au 10 000
 			mov 	dword ptr [rcx], 0xffffffff
 			mov 	dword ptr [rcx + 10000*4], 0xffffffff
-			mov 	dword ptr [rcx + r12*4 -4], 0xffffffff
+			mov 	dword ptr [rcx + r12*4-4], 0xffffffff
+
+			#on initialise notre compteur de boucle pour parcourir les pixels
+			mov r13, r12
+
+debut_boucle:
+			mov 	dword ptr [rcx + r13*4-4], 0xff0000ff
+			dec r13
+			jnz debut_boucle
+fin_boucle:
 
             pop r15
-
             pop r14
             pop r13
             pop r12
