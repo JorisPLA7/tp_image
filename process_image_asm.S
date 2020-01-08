@@ -55,11 +55,57 @@ process_image_asm:
 			#on initialise notre compteur de boucle pour parcourir les pixels
 			mov r13, r12
 
+#on mets l'imqge temporaire 2 tout en rouge
 debut_boucle:
-			mov 	dword ptr [rcx + r13*4-4], 0xff0000ff
+			mov 	dword ptr [r8 + r13*4-4], 0xff0000ff
 			dec r13
 			jnz debut_boucle
 fin_boucle:
+
+			#on initialise notre compteur de boucle pour parcourir les pixels
+			mov r13, r12
+
+			#I=R×0,2126+V×0,7152+B×0,0722
+
+			#0.2126 *256 = 54 = 0x36
+			#0.7152 *256 = 183 = 0xB7
+			#0.0722 *256 = 18 = 0x12
+
+			#on va multiplier par ce qu on vient de trouver puis shift pour mettre la virgule au bon endroit
+
+
+debut_boucle2:
+			#zx signifie que les bits non utilises seront mis a 0, c'est comme move un 0x00000000 avant
+			movzx 	r14, byte ptr [rdx + r13*4 - 4 ]  // on lit la composante rouge et stock dans r14
+			#on multiplie par le coef multiplicateur qui vq bien
+			imul 	r14, 0x36
+
+			#idem
+			movzx	r15, byte ptr [rdx + r13*4 -4 + 1 ]  // composante verte
+			imul 	r15, 0xB7
+
+			#on somme les composantes
+			add 	r14, r15
+
+			movzx 	r15, byte ptr [rdx + r13*4 -4 + 2]  // composante bleue
+			imul 	r15, 0x12
+
+			add 	r14,r15
+
+			#vu qu on a multiplie par des entier bien plus grands que nos coefs multiplicqteurs, on shift pour remettre la
+			#vigule au bon endroit:
+			shr 	r14, 8
+
+			#on ecrtit l'intensite dans l'image
+			mov 	byte ptr [rcx + r13 * 4 - 4], r14b
+			mov 	byte ptr [rcx + r13 * 4 - 3], r14b
+			mov 	byte ptr [rcx + r13 * 4 - 2], r14b
+			#on mets le canal alpha au max
+			mov 	byte ptr [rcx + r13 * 4 - 1], 0xff
+
+			dec r13
+			jnz debut_boucle2
+fin_boucle2:
 
             pop r15
             pop r14
